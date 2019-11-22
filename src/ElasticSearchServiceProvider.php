@@ -7,6 +7,8 @@ namespace Matchish\ScoutElasticSearch;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Scout\EngineManager;
+use Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine;
 
 final class ElasticSearchServiceProvider extends ServiceProvider
 {
@@ -30,6 +32,16 @@ final class ElasticSearchServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        resolve(EngineManager::class)->extend('elasticsearch', function () {
+            return new ElasticSearchEngine(
+                ClientBuilder::create()
+                    ->create()
+                    ->setHosts(config('scout.elasticsearch.hosts'))
+                    ->build(),
+                config('scout.elasticsearch.index')
+            );
+        });
+        
         $this->publishes([
             __DIR__.'/../config/elasticsearch.php' => config_path('elasticsearch.php'),
         ], 'config');
